@@ -17,7 +17,7 @@ import { useEffect, useState } from "react";
 
 const newTimerFormSchema = z.object({
   task: z.string().min(1, "Informe a tarefa"),
-  minutesAmount: z.number().min(5).max(60),
+  minutesAmount: z.number().min(1).max(60),
 });
 
 type NewTimerFormData = z.infer<typeof newTimerFormSchema>;
@@ -28,6 +28,7 @@ interface Timer {
   minutesAmount: number;
   startDate: Date;
   stopDate?: Date;
+  finishDate?: Date;
 }
 
 export function Home() {
@@ -49,21 +50,39 @@ export function Home() {
   });
 
   const activeTimer = timers.find((timer) => timer.id === activeTimerId);
+  const totalSeconds = activeTimer ? activeTimer.minutesAmount * 60 : 0;
 
   useEffect(() => {
     let interval: number;
     if (activeTimer) {
       interval = setInterval(() => {
-        setSecondsPassed(
-          differenceInSeconds(new Date(), activeTimer.startDate)
+        const secondsDiff = differenceInSeconds(
+          new Date(),
+          activeTimer.startDate
         );
+
+        if (secondsDiff >= totalSeconds) {
+          setTimers((prevTimers) =>
+            prevTimers.map((timer) => {
+              if (timer.id === activeTimerId) {
+                return { ...timer, stopDate: new Date() };
+              } else {
+                return timer;
+              }
+            })
+          );
+          setSecondsPassed(totalSeconds);
+          clearInterval(interval);
+        } else {
+          setSecondsPassed(secondsDiff);
+        }
       }, 1000);
     }
 
     return () => {
       clearInterval(interval);
     };
-  }, [activeTimer]);
+  }, [activeTimer, totalSeconds, activeTimerId]);
 
   function handleCreateNewTimer(data: NewTimerFormData) {
     const newTimer: Timer = {
@@ -79,8 +98,8 @@ export function Home() {
   }
 
   function handleStopTimer() {
-    setTimers(
-      timers.map((timer) => {
+    setTimers((prevTimers) =>
+      prevTimers.map((timer) => {
         if (timer.id === activeTimerId) {
           return { ...timer, stopDate: new Date() };
         } else {
@@ -91,7 +110,6 @@ export function Home() {
     setActiveTimerId(null);
   }
 
-  const totalSeconds = activeTimer ? activeTimer.minutesAmount * 60 : 0;
   const currentSeconds = activeTimer ? totalSeconds - secondsPassed : 0;
   const currentMinutes = Math.floor(currentSeconds / 60);
   const currentSecondsLeft = currentSeconds % 60;
@@ -134,7 +152,7 @@ export function Home() {
             id="minutesAmount"
             placeholder="00"
             step={5}
-            min={5}
+            min={1}
             max={60}
             disabled={!!activeTimer}
             {...register("minutesAmount", { valueAsNumber: true })}
