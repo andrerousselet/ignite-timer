@@ -48,7 +48,6 @@ export function TimerContextProvider({ children }: TimerContextProviderProps) {
     setTimers((prevTimers) => [...prevTimers, newTimer]);
     setActiveTimerId(newTimer.id);
     setSecondsPassed(0);
-    // reset();
   }
 
   function stopTimer() {

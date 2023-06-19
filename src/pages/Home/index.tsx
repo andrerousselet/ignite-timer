@@ -25,7 +25,12 @@ export function Home() {
     },
   });
 
-  const { handleSubmit, watch } = newTimerForm;
+  const { handleSubmit, watch, reset } = newTimerForm;
+
+  function handleCreateNewTimer(data: NewTimerFormData) {
+    createNewTimer(data);
+    reset();
+  }
 
   const task = watch("task");
   const minutesAmount = watch("minutesAmount");
@@ -33,7 +38,7 @@ export function Home() {
 
   return (
     <HomeContainer>
-      <form onSubmit={handleSubmit(createNewTimer)} action="">
+      <form onSubmit={handleSubmit(handleCreateNewTimer)} action="">
         <FormProvider {...newTimerForm}>
           <NewTimerForm />
         </FormProvider>
