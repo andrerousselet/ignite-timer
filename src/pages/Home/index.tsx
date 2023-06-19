@@ -10,7 +10,7 @@ import { TimerContext } from "../../contexts/TimerContext";
 
 const newTimerFormSchema = z.object({
   task: z.string().min(1, "Informe a tarefa"),
-  minutesAmount: z.number().min(1).max(60),
+  minutesAmount: z.number().min(5).max(60),
 });
 
 type NewTimerFormData = z.infer<typeof newTimerFormSchema>;

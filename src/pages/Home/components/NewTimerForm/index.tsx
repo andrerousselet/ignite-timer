@@ -1,7 +1,7 @@
 import { useContext } from "react";
-import { TimerContext } from "../..";
 import { FormContainer, MinutesAmountInput, TaskInput } from "./styles";
 import { useFormContext } from "react-hook-form";
+import { TimerContext } from "../../../../contexts/TimerContext";
 
 export function NewTimerForm() {
   const { activeTimer } = useContext(TimerContext);
@@ -30,7 +30,7 @@ export function NewTimerForm() {
         id="minutesAmount"
         placeholder="00"
         step={5}
-        min={1}
+        min={5}
         max={60}
         disabled={!!activeTimer}
         {...register("minutesAmount", { valueAsNumber: true })}
