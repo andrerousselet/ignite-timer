@@ -1,4 +1,4 @@
-import { Play } from "@phosphor-icons/react";
+import { HandPalm, Play } from "@phosphor-icons/react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -10,6 +10,7 @@ import {
   MinutesAmountInput,
   Separator,
   StartButton,
+  StopButton,
   TaskInput,
 } from "./styles";
 import { useEffect, useState } from "react";
@@ -26,6 +27,7 @@ interface Timer {
   task: string;
   minutesAmount: number;
   startDate: Date;
+  stopDate?: Date;
 }
 
 export function Home() {
@@ -76,6 +78,19 @@ export function Home() {
     reset();
   }
 
+  function handleStopTimer() {
+    setTimers(
+      timers.map((timer) => {
+        if (timer.id === activeTimerId) {
+          return { ...timer, stopDate: new Date() };
+        } else {
+          return timer;
+        }
+      })
+    );
+    setActiveTimerId(null);
+  }
+
   const totalSeconds = activeTimer ? activeTimer.minutesAmount * 60 : 0;
   const currentSeconds = activeTimer ? totalSeconds - secondsPassed : 0;
   const currentMinutes = Math.floor(currentSeconds / 60);
@@ -103,6 +118,7 @@ export function Home() {
             id="task"
             list="task-suggestions"
             placeholder="Dê um nome para o seu projeto"
+            disabled={!!activeTimer}
             {...register("task")}
           />
           <datalist id="task-suggestions">
@@ -120,6 +136,7 @@ export function Home() {
             step={5}
             min={5}
             max={60}
+            disabled={!!activeTimer}
             {...register("minutesAmount", { valueAsNumber: true })}
           />
           <span>minutos.</span>
@@ -131,10 +148,17 @@ export function Home() {
           <span>{secondsDisplay[0]}</span>
           <span>{secondsDisplay[1]}</span>
         </CountdownContainer>
-        <StartButton disabled={isSubmitDisabled} type="submit">
-          <Play size={24} />
-          Começar
-        </StartButton>
+        {activeTimer ? (
+          <StopButton onClick={handleStopTimer} type="button">
+            <HandPalm size={24} />
+            Interromper
+          </StopButton>
+        ) : (
+          <StartButton disabled={isSubmitDisabled} type="submit">
+            <Play size={24} />
+            Começar
+          </StartButton>
+        )}
       </form>
     </HomeContainer>
   );
