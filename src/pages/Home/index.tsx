@@ -1,4 +1,4 @@
-import { createContext, useState } from "react";
+import { useContext } from "react";
 import { NewTimerForm } from "./components/NewTimerForm";
 import { Countdown } from "./components/Countdown";
 import { FormProvider, useForm } from "react-hook-form";
@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { HandPalm, Play } from "@phosphor-icons/react";
 import { HomeContainer, StartButton, StopButton } from "./styles";
+import { TimerContext } from "../../contexts/TimerContext";
 
 const newTimerFormSchema = z.object({
   task: z.string().min(1, "Informe a tarefa"),
@@ -14,30 +15,8 @@ const newTimerFormSchema = z.object({
 
 type NewTimerFormData = z.infer<typeof newTimerFormSchema>;
 
-export interface Timer {
-  id: string;
-  task: string;
-  minutesAmount: number;
-  startDate: Date;
-  stopDate?: Date;
-  finishDate?: Date;
-}
-
-interface TimerContextType {
-  activeTimer: Timer | undefined;
-  activeTimerId: string | null;
-  finishCurrentTimer: () => void;
-  secondsPassed: number;
-  handleSetSecondsPassed: (seconds: number) => void;
-}
-
-export const TimerContext = createContext({} as TimerContextType);
-
 export function Home() {
-  const [timers, setTimers] = useState<Timer[]>([]);
-  const [activeTimerId, setActiveTimerId] = useState<string | null>(null);
-  const [secondsPassed, setSecondsPassed] = useState(0);
-
+  const { activeTimer, createNewTimer, stopTimer } = useContext(TimerContext);
   const newTimerForm = useForm<NewTimerFormData>({
     resolver: zodResolver(newTimerFormSchema),
     defaultValues: {
@@ -46,51 +25,7 @@ export function Home() {
     },
   });
 
-  const { handleSubmit, watch, reset } = newTimerForm;
-
-  const activeTimer = timers.find((timer) => timer.id === activeTimerId);
-
-  function handleCreateNewTimer(data: NewTimerFormData) {
-    const newTimer: Timer = {
-      id: String(new Date().getTime()),
-      task: data.task,
-      minutesAmount: data.minutesAmount,
-      startDate: new Date(),
-    };
-    setTimers((prevTimers) => [...prevTimers, newTimer]);
-    setActiveTimerId(newTimer.id);
-    setSecondsPassed(0);
-    reset();
-  }
-
-  function handleStopTimer() {
-    setTimers((prevTimers) =>
-      prevTimers.map((timer) => {
-        if (timer.id === activeTimerId) {
-          return { ...timer, stopDate: new Date() };
-        } else {
-          return timer;
-        }
-      })
-    );
-    setActiveTimerId(null);
-  }
-
-  function finishCurrentTimer() {
-    setTimers((prevTimers) =>
-      prevTimers.map((timer) => {
-        if (timer.id === activeTimerId) {
-          return { ...timer, stopDate: new Date() };
-        } else {
-          return timer;
-        }
-      })
-    );
-  }
-
-  function handleSetSecondsPassed(seconds: number) {
-    setSecondsPassed(seconds);
-  }
+  const { handleSubmit, watch } = newTimerForm;
 
   const task = watch("task");
   const minutesAmount = watch("minutesAmount");
@@ -98,23 +33,13 @@ export function Home() {
 
   return (
     <HomeContainer>
-      <form onSubmit={handleSubmit(handleCreateNewTimer)} action="">
-        <TimerContext.Provider
-          value={{
-            activeTimer,
-            activeTimerId,
-            finishCurrentTimer,
-            secondsPassed,
-            handleSetSecondsPassed,
-          }}
-        >
-          <FormProvider {...newTimerForm}>
-            <NewTimerForm />
-          </FormProvider>
-          <Countdown />
-        </TimerContext.Provider>
+      <form onSubmit={handleSubmit(createNewTimer)} action="">
+        <FormProvider {...newTimerForm}>
+          <NewTimerForm />
+        </FormProvider>
+        <Countdown />
         {activeTimer ? (
-          <StopButton onClick={handleStopTimer} type="button">
+          <StopButton onClick={stopTimer} type="button">
             <HandPalm size={24} />
             Interromper
           </StopButton>

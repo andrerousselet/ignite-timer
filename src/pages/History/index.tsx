@@ -1,6 +1,10 @@
+import { useContext } from "react";
 import { HistoryContainer, HistoryList, Status } from "./styles";
+import { TimerContext } from "../../contexts/TimerContext";
 
 export function History() {
+  const { timers } = useContext(TimerContext);
+
   return (
     <HistoryContainer>
       <h1>Meu Histórico</h1>
