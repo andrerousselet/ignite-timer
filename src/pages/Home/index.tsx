@@ -84,6 +84,12 @@ export function Home() {
   const minutesDisplay = String(currentMinutes).padStart(2, "0");
   const secondsDisplay = String(currentSecondsLeft).padStart(2, "0");
 
+  useEffect(() => {
+    if (activeTimer) {
+      document.title = `${minutesDisplay}:${secondsDisplay}`;
+    }
+  }, [activeTimer, minutesDisplay, secondsDisplay]);
+
   const task = watch("task");
   const minutesAmount = watch("minutesAmount");
   const isSubmitDisabled = !task || !minutesAmount;
