@@ -2,6 +2,7 @@ import { Play } from "@phosphor-icons/react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { differenceInSeconds } from "date-fns";
 import {
   CountdownContainer,
   FormContainer,
@@ -11,7 +12,7 @@ import {
   StartButton,
   TaskInput,
 } from "./styles";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const newTimerFormSchema = z.object({
   task: z.string().min(1, "Informe a tarefa"),
@@ -24,6 +25,7 @@ interface Timer {
   id: string;
   task: string;
   minutesAmount: number;
+  startDate: Date;
 }
 
 export function Home() {
@@ -44,18 +46,35 @@ export function Home() {
     },
   });
 
+  const activeTimer = timers.find((timer) => timer.id === activeTimerId);
+
+  useEffect(() => {
+    let interval: number;
+    if (activeTimer) {
+      interval = setInterval(() => {
+        setSecondsPassed(
+          differenceInSeconds(new Date(), activeTimer.startDate)
+        );
+      }, 1000);
+    }
+
+    return () => {
+      clearInterval(interval);
+    };
+  }, [activeTimer]);
+
   function handleCreateNewTimer(data: NewTimerFormData) {
     const newTimer: Timer = {
       id: String(new Date().getTime()),
       task: data.task,
       minutesAmount: data.minutesAmount,
+      startDate: new Date(),
     };
     setTimers((prevTimers) => [...prevTimers, newTimer]);
     setActiveTimerId(newTimer.id);
+    setSecondsPassed(0);
     reset();
   }
-
-  const activeTimer = timers.find((timer) => timer.id === activeTimerId);
 
   const totalSeconds = activeTimer ? activeTimer.minutesAmount * 60 : 0;
   const currentSeconds = activeTimer ? totalSeconds - secondsPassed : 0;
