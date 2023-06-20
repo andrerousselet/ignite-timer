@@ -26,7 +26,7 @@ export function Countdown() {
       interval = setInterval(() => {
         const secondsDiff = differenceInSeconds(
           new Date(),
-          activeTimer.startDate
+          new Date(activeTimer.startDate)
         );
 
         if (secondsDiff >= totalSeconds) {
