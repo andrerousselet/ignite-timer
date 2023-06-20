@@ -1,4 +1,10 @@
-import { ReactNode, createContext, useState } from "react";
+import { ReactNode, createContext, useReducer, useState } from "react";
+import { TimersState, timerReducer } from "../reducers/timerReducer";
+import {
+  finishCurrentTimerAction,
+  startNewTimerAction,
+  stopTimerAction,
+} from "../reducers/timerActions";
 
 interface NewTimerData {
   task: string;
@@ -18,11 +24,11 @@ interface TimerContextType {
   timers: Timer[];
   activeTimer: Timer | undefined;
   activeTimerId: string | null;
-  finishCurrentTimer: () => void;
   secondsPassed: number;
-  handleSetSecondsPassed: (seconds: number) => void;
   createNewTimer: (data: NewTimerData) => void;
   stopTimer: () => void;
+  finishCurrentTimer: () => void;
+  handleSetSecondsPassed: (seconds: number) => void;
 }
 
 export const TimerContext = createContext({} as TimerContextType);
@@ -31,10 +37,15 @@ interface TimerContextProviderProps {
   children: ReactNode;
 }
 
+const initialState: TimersState = {
+  timers: [],
+  activeTimerId: null,
+};
+
 export function TimerContextProvider({ children }: TimerContextProviderProps) {
-  const [timers, setTimers] = useState<Timer[]>([]);
-  const [activeTimerId, setActiveTimerId] = useState<string | null>(null);
+  const [timersState, dispatch] = useReducer(timerReducer, initialState);
   const [secondsPassed, setSecondsPassed] = useState(0);
+  const { timers, activeTimerId }: TimersState = timersState;
 
   const activeTimer = timers.find((timer) => timer.id === activeTimerId);
 
@@ -45,34 +56,16 @@ export function TimerContextProvider({ children }: TimerContextProviderProps) {
       minutesAmount: data.minutesAmount,
       startDate: new Date(),
     };
-    setTimers((prevTimers) => [...prevTimers, newTimer]);
-    setActiveTimerId(newTimer.id);
+    dispatch(startNewTimerAction(newTimer));
     setSecondsPassed(0);
   }
 
   function stopTimer() {
-    setTimers((prevTimers) =>
-      prevTimers.map((timer) => {
-        if (timer.id === activeTimerId) {
-          return { ...timer, stopDate: new Date() };
-        } else {
-          return timer;
-        }
-      })
-    );
-    setActiveTimerId(null);
+    dispatch(stopTimerAction());
   }
 
   function finishCurrentTimer() {
-    setTimers((prevTimers) =>
-      prevTimers.map((timer) => {
-        if (timer.id === activeTimerId) {
-          return { ...timer, stopDate: new Date() };
-        } else {
-          return timer;
-        }
-      })
-    );
+    dispatch(finishCurrentTimerAction());
   }
 
   function handleSetSecondsPassed(seconds: number) {
