@@ -1,10 +1,17 @@
-import { ReactNode, createContext, useReducer, useState } from "react";
+import {
+  ReactNode,
+  createContext,
+  useEffect,
+  useReducer,
+  useState,
+} from "react";
 import { TimersState, timerReducer } from "../reducers/timerReducer";
 import {
   finishCurrentTimerAction,
   startNewTimerAction,
   stopTimerAction,
 } from "../reducers/timerActions";
+import { differenceInSeconds } from "date-fns";
 
 interface NewTimerData {
   task: string;
@@ -43,11 +50,30 @@ const initialState: TimersState = {
 };
 
 export function TimerContextProvider({ children }: TimerContextProviderProps) {
-  const [timersState, dispatch] = useReducer(timerReducer, initialState);
-  const [secondsPassed, setSecondsPassed] = useState(0);
+  const [timersState, dispatch] = useReducer(
+    timerReducer,
+    initialState,
+    (initState) => {
+      const JSONStoredTimers = localStorage.getItem(
+        "@ignite-timer:timers-state:1.0.0"
+      );
+      if (JSONStoredTimers) return JSON.parse(JSONStoredTimers);
+      return initState;
+    }
+  );
   const { timers, activeTimerId }: TimersState = timersState;
-
   const activeTimer = timers.find((timer) => timer.id === activeTimerId);
+  const [secondsPassed, setSecondsPassed] = useState(() => {
+    if (activeTimer) {
+      return differenceInSeconds(new Date(), new Date(activeTimer.startDate));
+    }
+    return 0;
+  });
+
+  useEffect(() => {
+    const timersJSON = JSON.stringify(timersState);
+    localStorage.setItem("@ignite-timer:timers-state:1.0.0", timersJSON);
+  }, [timersState]);
 
   function createNewTimer(data: NewTimerData) {
     const newTimer: Timer = {
