@@ -31,11 +31,12 @@ export function timerReducer(state: TimersState, action: any) {
         ...state,
         timers: state.timers.map((timer) => {
           if (timer.id === state.activeTimerId) {
-            return { ...timer, stopDate: new Date() };
+            return { ...timer, finishDate: new Date() };
           } else {
             return timer;
           }
-        })
+        }),
+        activeTimerId: null,
       }
     default:
       return state;
